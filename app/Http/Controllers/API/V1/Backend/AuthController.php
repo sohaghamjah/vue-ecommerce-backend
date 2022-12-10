@@ -5,7 +5,9 @@ namespace App\Http\Controllers\API\V1\Backend;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\PasswordChangeFormRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 use stdClass, Validator, JWTAuthException;
 
@@ -50,6 +52,24 @@ class AuthController extends Controller
     public function profile()
     {
         return $this->sendSuccessResponse(auth()->user(),$message="Logged in admin user profile data");
+    }
+
+    public function passwordChange(PasswordChangeFormRequest $request){
+        try {
+           $user = Auth::user();
+           if(!Hash::check($request->current_password, $user->password)){
+                return $this->sendErrorResponse('Current password dose not match!','Current password dose not match!');
+           }else{
+            $user->password = $request->password;
+            if($user->update()){
+                return $this->sendSuccessResponse('Password changed successfull!','Password changed successfull!');
+            }else{
+                return $this->sendErrorResponse('Failed to change password!','Failed to change password!');
+            }
+           }
+        } catch (\Throwable $th) {
+            return $this->sendErrorResponse('Failed To Change Password',$th->getMessage());
+        }
     }
 
     public function sendSuccessResponse($data,$message)

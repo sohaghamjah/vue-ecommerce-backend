@@ -11,6 +11,7 @@ Route::prefix('v1')->group(function () {
     Route::group(['middleware' => 'jwt.verify'], function(){
         Route::prefix('backend')->group(function(){
             Route::get('profile', [AuthController::class, 'profile']);
+            Route::post('password-change', [AuthController::class, 'passwordChange']);
         });
 
         Route::prefix('frontend')->group(function(){
