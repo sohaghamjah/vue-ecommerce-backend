@@ -43,11 +43,11 @@
                 <tbody>
                   <tr v-show="!tableData.length"><td class="text-danger text-center" colspan="6">No data found!</td></tr>
                   <tr v-show="tableData.length" v-for="(brand, i) in tableData" :key="i">
-                    <td class="text-center">{{ i++ }}</td>
+                    <td class="text-center">{{ i+1 }}</td>
                     <td class="text-left">{{ brand.name }}</td>
                     <td class="text-center">{{ brand.status === 1 ? 'Active' : 'Inactive' }}</td>
-                    <td class="text-center">{{ brand.created_by }}</td>
-                    <td class="text-center">{{ brand.updated_by }}</td>
+                    <td class="text-center">{{ brand.created_by.name }}</td>
+                    <td class="text-center">{{ brand.created_at }}</td>
                     <td class="text-center">
                       <button type="button" class="btn btn-primary btn-sm mr-2"><i class="fa fa-edit"></i></button>
                       <button type="button" class="btn btn-danger btn-sm"><i class="fa fa-trash-alt"></i></button>
@@ -55,6 +55,9 @@
                   </tr>
                 </tbody>
               </table>
+              <br>
+              <pagination v-if="pagination.last_page > 1" :pagination="pagination" :offset="5" 
+                @paginate="query === '' ? getData() : searchData() "/>
             </div>
           </div>
         </div>
@@ -91,8 +94,12 @@
 </template>
 
 <script>
+import Pagination from "./../Components/Pagination.vue";
 export default {
     name: 'Brand',
+    components:{
+      Pagination,
+    },
     data(){
       return{
         editMode: false,
@@ -104,7 +111,7 @@ export default {
           current_page: 1
         },
         form:{
-          name: '',
+          name:'',
         },
         errors:{}
       }
@@ -114,9 +121,8 @@ export default {
     },
     methods:{
       getData(){
-        axios.get("brands?page=" + this.current_page)
+        axios.get("brands?page=" + this.pagination.current_page)
         .then(res => {
-          console.log(res);
           this.tableData = res.data.data;
           this.pagination = res.data.meta;
         })
@@ -124,15 +130,27 @@ export default {
           console.log(error);
         });
       },
+      searchData(){
+       
+      },
       addItem(){
         this.modalTitle = "Add new brand";
         this.modalShow = true;
         this.errors = {};
       },
       save(){
-        axios.post('brands', this.from)
-        .then(rese => {
-
+        axios
+        .post("brands",this.form)
+        .then(res => {
+          Toast.fire({
+                  icon: res.data.status === true ? 'success' : 'error',
+                  title:res.data.message
+              });
+            if(res.data.status === true)
+            {
+              this.getData();
+              this.modalShow = false;
+            }
         })
         .catch(error => {
           this.errors = error.response.data.errors;

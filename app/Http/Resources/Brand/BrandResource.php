@@ -18,8 +18,8 @@ class BrandResource extends JsonResource
             'id'         => $this->id,
             'name'       => $this->name,
             'status'     => $this->status,
-            'created_by' => $this->created_by,
-            'updated_by' => $this->updated_by,
+            'created_by' => $this->createdBy,
+            'created_at' => date('d M y', strtotime($this->created_at)),
         ];
     }
 }
