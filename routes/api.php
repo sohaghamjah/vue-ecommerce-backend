@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\API\V1\Backend\AuthController;
+use App\Http\Controllers\API\V1\Backend\BrandController;
 use App\Http\Controllers\API\V1\Frontend\AuthController as FrontendAuthController;
 use Illuminate\Support\Facades\Route;
 
@@ -12,6 +13,8 @@ Route::prefix('v1')->group(function () {
         Route::prefix('backend')->group(function(){
             Route::get('profile', [AuthController::class, 'profile']);
             Route::post('password-change', [AuthController::class, 'passwordChange']);
+
+            Route::apiResource('brands', BrandController::class);
         });
 
         Route::prefix('frontend')->group(function(){

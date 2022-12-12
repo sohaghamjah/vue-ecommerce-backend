@@ -8,10 +8,11 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\PasswordChangeFormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use App\Http\Controllers\API\V1\Backend\ApiController;
 
 use stdClass, Validator, JWTAuthException;
 
-class AuthController extends Controller
+class AuthController extends ApiController
 {
     private $token = null;
 
@@ -70,23 +71,5 @@ class AuthController extends Controller
         } catch (\Throwable $th) {
             return $this->sendErrorResponse('Failed To Change Password',$th->getMessage());
         }
-    }
-
-    public function sendSuccessResponse($data,$message)
-    {
-        $response = new stdClass;
-        $response->status = true;
-        $response->data = $data;
-        $response->message = $message;
-        return response()->json($response);
-    }
-
-    public function sendErrorResponse($errors,$message)
-    {
-        $response = new stdClass;
-        $response->status = false;
-        $response->errors = $errors;
-        $response->message = $message;
-        return response()->json($response);
     }
 }

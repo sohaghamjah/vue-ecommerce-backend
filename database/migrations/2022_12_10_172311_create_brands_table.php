@@ -15,8 +15,8 @@ return new class extends Migration
     {
         Schema::create('brands', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('updated_by')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('created_by')->constrained('brands')->cascadeOnDelete();
+            $table->foreignId('updated_by')->constrained('brands')->cascadeOnDelete();
             $table->string('name')->unique();
             $table->enum('status',[1,2])->default(1)->comment('1=active,2=inactive');   
             $table->timestamps();
