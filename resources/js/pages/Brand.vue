@@ -14,13 +14,13 @@
           <div class="card-header col-nd-12">
             <div class="row">
               <div class="form-group col-md-4">
-                    <input type="text" id="name" class="form-control" placeholder="Search Brand Name" @click="searchData">
+                    <input type="text" v-model="query.name" id="name" class="form-control" placeholder="Search Brand Name">
               </div>
               <div class="form-group col-md-8 text-right">
-                  <button type="button" class="btn btn-info mr-2">
+                  <button type="button" @click="searchData" class="btn btn-info mr-2">
                     <i class="fas fa-search"></i>
                   </button>
-                  <button type="button" class="btn btn-warning" @click="relode">
+                  <button type="button" class="btn btn-warning" @click="reload">
                     <i class="fas fa-sync"></i>
                   </button>
               </div>
@@ -49,8 +49,8 @@
                     <td class="text-center">{{ brand.created_by.name }}</td>
                     <td class="text-center">{{ brand.created_at }}</td>
                     <td class="text-center">
-                      <button type="button" class="btn btn-primary btn-sm mr-2"><i class="fa fa-edit"></i></button>
-                      <button type="button" class="btn btn-danger btn-sm"><i class="fa fa-trash-alt"></i></button>
+                      <button type="button" class="btn btn-primary btn-sm mr-2" @click="editItem(brand)"><i class="fa fa-edit"></i></button>
+                      <button type="button" class="btn btn-danger btn-sm" @click="deleteItem(brand)"><i class="fa fa-trash-alt"></i></button>
                     </td>
                   </tr>
                 </tbody>
@@ -106,13 +106,13 @@ export default {
         modalShow: false,
         modalTitle: "",
         tableData:[],
-        query:'',
+        query:{
+          name:''
+        },
         pagination:{
           current_page: 1
         },
-        form:{
-          name:'',
-        },
+        form:{},
         errors:{}
       }
     },
@@ -131,21 +131,46 @@ export default {
         });
       },
       searchData(){
-       
+        const query = $.param(this.query);
+        axios.get("brands?page=" + this.pagination.current_page+'&'+query)
+        .then(res => {
+          this.tableData = res.data.data;
+          this.pagination = res.data.meta;
+        })
+        .catch(error => {
+          console.log(error);
+        });
+      },
+      reload(){
+        this.query.name = '';
+        this.getData();
       },
       addItem(){
         this.modalTitle = "Add new brand";
         this.modalShow = true;
         this.errors = {};
+        this.form = {
+          name:'',
+        };
+      },
+      editItem(item){ 
+        this.editMode = true;
+        this.modalTitle = "Edit "+item.name;
+        this.form = {
+          id: item.id,
+          name: item.name,
+        };
+        this.modalShow = true;
+        this.errors={};
       },
       save(){
         axios
         .post("brands",this.form)
         .then(res => {
-          Toast.fire({
-                  icon: res.data.status === true ? 'success' : 'error',
-                  title:res.data.message
-              });
+            Toast.fire({
+                icon: res.data.status === true ? 'success' : 'error',
+                title:res.data.message
+            });
             if(res.data.status === true)
             {
               this.getData();
@@ -157,7 +182,52 @@ export default {
         })
       },
       update(){
-
+      axios
+        .put("brands/"+this.form.id,this.form)
+        .then(res => {
+            Toast.fire({
+                icon: res.data.status === true ? 'success' : 'error',
+                title:res.data.message
+            });
+            if(res.data.status === true)
+            {
+              this.getData();
+              this.modalShow = false;
+            }
+        })
+        .catch(error => {
+          this.errors = error.response.data.errors;
+        })
+      },
+      deleteItem(item){
+        Swal.fire({
+          title: `Are you sure to delete ${item.name}?`,
+          text: "You won't be able to revert this!",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Yes!'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            axios
+              .delete("brands/"+item.id)
+              .then(res => {
+                  Toast.fire({
+                      icon: res.data.status === true ? 'success' : 'error',
+                      title:res.data.message
+                  });
+                  if(res.data.status === true)
+                  {
+                    this.getData();
+                    this.modalShow = false;
+                  }
+              })
+              .catch(error => {
+                this.errors = error.response.data.errors;
+              })
+          }
+        })
       }
     }
 }

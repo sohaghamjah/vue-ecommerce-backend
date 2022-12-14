@@ -12,7 +12,10 @@ use App\Models\Brand;
 class BrandController extends ApiController
 {
     public function index(Request $request){
-        return BrandResource::collection(Brand::orderByDesc('id')->paginate(10));
+        $name = isset($request->name) ? $request->name : '';
+        return BrandResource::collection(Brand::when($name, function($q) use ($name){
+            $q->where('name', 'like', '%'.$name.'%');
+        })->orderByDesc('id')->paginate(10));
     }
 
     public function store(BrandFromRequest $request){
@@ -25,6 +28,37 @@ class BrandController extends ApiController
                 return $this->sendSuccessResponse($brand,'Data Has Been Saved');
             }else{
                 return $this->sendErrorResponse([],'Faild To Save Data');
+            }
+        } catch (\Throwable $th) {
+            return $this->sendErrorResponse([], $th->getMessage());
+        }
+    }
+
+    public function update(BrandFromRequest $request, Brand $brand){
+        try {
+            $brand = $brand->update([
+                'name' => $request->name,
+                'updated_by' => auth('api')->user()->id,
+            ]);
+            if($brand)
+            {
+                return $this->sendSuccessResponse($brand,'Data Has Been Updated');
+            }else{
+                return $this->sendErrorResponse([],'Faild To Save Updated');
+            }
+        } catch (\Throwable $th) {
+            return $this->sendErrorResponse([], $th->getMessage());
+        }
+    }
+
+    public function destroy(Brand $brand){
+        try {
+            $brand = $brand->delete();
+            if($brand)
+            {
+                return $this->sendSuccessResponse($brand,'Data Has Been Deleted');
+            }else{
+                return $this->sendErrorResponse([],'Faild To Save Deleted');
             }
         } catch (\Throwable $th) {
             return $this->sendErrorResponse([], $th->getMessage());

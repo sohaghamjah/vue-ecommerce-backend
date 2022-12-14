@@ -26,9 +26,10 @@ class BrandFromRequest extends FormRequest
         $rules = [
             'name' => ['required','unique:brands,name'],
         ];
+        
 
         if(request()->id){
-            $rules['name'][1] = 'unique:brands,name,id,'.request()->id;
+            $rules['name'][1] = 'unique:brands,name,'.request()->id;
         }
 
         return $rules;
