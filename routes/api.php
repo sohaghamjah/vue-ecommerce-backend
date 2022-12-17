@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\API\V1\Backend\AuthController;
 use App\Http\Controllers\API\V1\Backend\BrandController;
+use App\Http\Controllers\API\V1\Backend\CategoryController;
 use App\Http\Controllers\API\V1\Frontend\AuthController as FrontendAuthController;
 use Illuminate\Support\Facades\Route;
 
@@ -15,6 +16,7 @@ Route::prefix('v1')->group(function () {
             Route::post('password-change', [AuthController::class, 'passwordChange']);
 
             Route::apiResource('brands', BrandController::class);
+            Route::apiResource('categories', CategoryController::class);
         });
 
         Route::prefix('frontend')->group(function(){
