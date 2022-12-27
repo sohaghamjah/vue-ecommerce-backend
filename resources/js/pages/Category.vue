@@ -53,12 +53,14 @@
                     <td class="text-center">{{ category.created_by.name }}</td>
                     <td class="text-center">{{ category.created_at }}</td>
                     <td class="text-center">
-                      <button type="button" class="btn btn-primary btn-sm mr-2"><i class="fa fa-edit"></i></button>
+                      <button type="button" class="btn btn-primary btn-sm mr-2" @click="editItem(category)"><i class="fa fa-edit"></i></button>
                       <button type="button" class="btn btn-danger btn-sm"><i class="fa fa-trash-alt"></i></button>
                     </td>
                   </tr>
                 </tbody>
               </table>
+              <br>
+               <pagination v-if="pagination.last_page > 1" :pagination="pagination" :offset="5" @paginate="getData()"/>
             </div>
           </div>
         </div>
@@ -78,16 +80,19 @@
              <form>
                 <div class="form-group">
                     <label for="name">Category Name</label>
-                    <input type="text" v-model="form.name" class="form-control">
+                    <input type="text" v-model="form.name" class="form-control" :class="errors.name ? 'is-invalid' : ''">
+                    <small v-if="errors.name" class="text-danger">{{errors.name[0]}}</small>
                 </div>
-                 <div class="form-group">
-                      <label for="slug">Slug</label>
-                      <input type="text" v-model="slug" id="slug" class="form-control" :class="errors.slug ? 'is-invalid' : ''">
-                  </div>  
+                <div class="form-group">
+                    <label for="slug">Slug</label>
+                    <input type="text" v-model="slug" id="slug" class="form-control" :class="errors.slug ? 'is-invalid' : ''">
+                    <small v-if="errors.slug" class="text-danger">{{errors.slug[0]}}</small>
+                </div>  
                 <div class="form-group">
                     <label for="parent_id">Parent</label>
-                    <select class="form-control" name="parent" id="parent_id">
-                        <option value="">Laptop</option>
+                    <select v-model="form.parent_id" class="form-control" name="parent_id" id="parent_id" :class="errors.parent_id ? 'is-invalid' : ''">
+                        <option value="0">Select One</option>
+                        <option v-for="(category, i) in categoryData" :key="i" :value="category.id">{{ category.name }}</option>
                     </select>
                 </div>
             </form>
@@ -104,14 +109,19 @@
 </template>
 
 <script>
+import Pagination from './../Components/Pagination.vue'
 export default {
     name: 'Category',
+    components:{
+      Pagination,
+    },
     data(){
       return{
         editMode: false,
         modalShow: false,
         modalTitle: '',
         tableData: [],
+        categoryData: [],
         form:{
           name: '',
           slug: '',
@@ -125,9 +135,10 @@ export default {
     },
     created(){
       this.getData();
+      this.categoryList();
     },
     computed:{
-       slug(){
+      slug(){
         return this.form.slug = this.generateSlug(this.form.name);
       }
     },
@@ -135,11 +146,73 @@ export default {
       addItem(){
         this.modalTitle = "Category Create";
         this.modalShow = true;
+        this.editMode = false;
+        this.errors = {};
+        this.form = {
+          name: '',
+          slug: '',
+          parent_id: '',
+        }
+      },
+      save(){
+        axios.post('categories', this.form)
+        .then(res => {
+            Toast.fire({
+                icon: res.data.status === true ? 'success' : 'error',
+                title:res.data.message
+            });
+            if(res.data.status == true){
+              this.getData();
+              this.modalShow = false;
+              this.categoryData();
+            }
+        })
+        .catch(e => {
+          this.errors = e.response.data.errors;
+        });
+      },
+      editItem(data){
+        this.errors = {};
+        this.editMode = true;
+        this.modalShow = true;
+        this.form = {
+          id: data.id,
+          name: data.name,
+          slug: data.slug,
+          parent_id: data.parent_id,
+        };
+        this.modalTitle = "Edit "+ data.name;
+      },
+      update(){
+        axios.put('categories/'+this.form.id, this.form)
+        .then(res => {
+            Toast.fire({
+                icon: res.data.status === true ? 'success' : 'error',
+                title: res.data.message
+            });
+            if(res.data.status === true){
+              this.getData();
+              this.modalShow = false;
+            }
+        })
+        .catch(error => {
+          this.error = error.response.data.errors;
+        })
       },
       getData(){
         axios.get('categories?page=' + this.pagination.current_page)
         .then(res => {
-          this.tableData = res.data.data
+          this.tableData = res.data.data;
+          this.pagination = res.data.meta;
+        })
+        .catch(error => {
+          console.log(error);
+        })  
+      },
+      categoryList(){
+        axios.get('category-list')
+        .then(res => {
+          this.categoryData = res.data.data
         })
         .catch(error => {
           console.log(error);

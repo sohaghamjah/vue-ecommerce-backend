@@ -17,6 +17,7 @@ Route::prefix('v1')->group(function () {
 
             Route::apiResource('brands', BrandController::class);
             Route::apiResource('categories', CategoryController::class);
+            Route::get('category-list',[CategoryController::class,'categoryList']);
         });
 
         Route::prefix('frontend')->group(function(){
