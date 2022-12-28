@@ -14,13 +14,13 @@
           <div class="card-header col-nd-12">
             <div class="row">
               <div class="form-group col-md-4">
-                    <input type="text" id="name" class="form-control" placeholder="Search Brand Name">
+                <input type="text" id="name" v-model="query.name" class="form-control" placeholder="Search Category Name">
               </div>
               <div class="form-group col-md-8 text-right">
-                  <button type="button" class="btn btn-info mr-2">
+                  <button type="button" @click="searchData" class="btn btn-info mr-2">
                     <i class="fas fa-search"></i>
                   </button>
-                  <button type="button" class="btn btn-warning">
+                  <button type="button" @click="reload" class="btn btn-warning">
                     <i class="fas fa-sync"></i>
                   </button>
               </div>
@@ -54,7 +54,7 @@
                     <td class="text-center">{{ category.created_at }}</td>
                     <td class="text-center">
                       <button type="button" class="btn btn-primary btn-sm mr-2" @click="editItem(category)"><i class="fa fa-edit"></i></button>
-                      <button type="button" class="btn btn-danger btn-sm"><i class="fa fa-trash-alt"></i></button>
+                      <button type="button" class="btn btn-danger btn-sm" @click="deleteItem(category)"><i class="fa fa-trash-alt"></i></button>
                     </td>
                   </tr>
                 </tbody>
@@ -126,6 +126,9 @@ export default {
           name: '',
           slug: '',
           parent_id: ''
+        },
+        query:{
+          name: ""
         },
         errors:{},
         pagination:{
@@ -209,6 +212,21 @@ export default {
           console.log(error);
         })  
       },
+      searchData(){
+        const query = $.param(this.query);
+        axios.get('categories?page=' + this.pagination.current_page+'&'+query)
+        .then(res => {
+          this.tableData = res.data.data;
+          his.pagination = res.data.meta;
+        })
+        .catch(error => {
+          console.log(error);
+        })
+      },
+      reload(){
+        this.query.name = '';
+        this.getData();
+      },
       categoryList(){
         axios.get('category-list')
         .then(res => {
@@ -217,6 +235,35 @@ export default {
         .catch(error => {
           console.log(error);
         })  
+      },
+      deleteItem(item){
+        Swal.fire({
+          title: `Are you sure to delete ${item.name}?`,
+          text: "You won't be able to revert this!",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Yes!'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            axios.delete("categories/"+item.id)
+              .then(res => {
+                  Toast.fire({
+                      icon: res.data.status === true ? 'success' : 'error',
+                      title:res.data.message
+                  });
+                  if(res.data.status === true)
+                  {
+                    this.getData();
+                    this.modalShow = false;
+                  }
+              })
+              .catch(error => {
+                this.errors = error.response.data.errors;
+              })
+          }
+        })
       },
       generateSlug(string)
       {

@@ -11,7 +11,10 @@ use Illuminate\Http\Request;
 class CategoryController extends ApiController
 { 
     public function index(Request $request){
-        $data = Category::orderBy('id','desc')->paginate(10);
+        $name = isset($request->name) ? $request->name : '';
+        $data = Category::when($name, function($q) use ($name){
+            $q->where('name', 'like', '%'.$name.'%');
+        })->orderBy('id','desc')->paginate(10);
         return CategoryResource::collection($data);
     }
 
@@ -55,6 +58,19 @@ class CategoryController extends ApiController
             }
         } catch (\Exception $th) {
             return $this->sendErrorResponse([],$th->getMessage());
+        }
+    }
+
+    public function destroy(Category $category){
+        try {
+            $category = $category->delete();
+            if($category){
+                return $this->sendSuccessResponse($category, 'Data deleted succesffull!');
+            }else{
+                return $this->sendErrorResponse([], 'Failed to delete data!');
+            }
+        } catch (\Throwable $th) {
+            return $this->sendErrorResponse([], $th->getMessage());
         }
     }
 }

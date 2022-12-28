@@ -210,8 +210,7 @@ export default {
           confirmButtonText: 'Yes!'
         }).then((result) => {
           if (result.isConfirmed) {
-            axios
-              .delete("brands/"+item.id)
+            axios.delete("brands/"+item.id)
               .then(res => {
                   Toast.fire({
                       icon: res.data.status === true ? 'success' : 'error',
